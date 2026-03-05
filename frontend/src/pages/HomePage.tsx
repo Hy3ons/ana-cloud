@@ -214,9 +214,26 @@ const HomePage: React.FC = () => {
                         </p>
                     </div>
 
-                    <div style={styles.footerInfo}>
-                        <p>© 2026 ANA Club. All rights reserved.</p>
-                        <p>Unauthorized access is prohibited.</p>
+                    <div style={{ ...styles.footerInfo, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px' } as React.CSSProperties}>
+                        <div style={{ textAlign: 'center' }}>
+                            <p style={{ margin: 0 }}>© 2026 ANA Club. All rights reserved.</p>
+                            <p style={{ margin: 0 }}>Unauthorized access is prohibited.</p>
+                        </div>
+                        <a
+                            href="https://github.com/Hy3ons/ana-cloud"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="해당 시스템을 개발한 Github Repository로 이동합니다."
+                            style={{ display: 'flex', alignItems: 'center', transition: 'opacity 0.2s' }}
+                        >
+                            <img
+                                src="/logo-github-w.png"
+                                alt="GitHub Repository"
+                                style={{ width: '28px', height: '28px', opacity: 0.7 }}
+                                onMouseOver={e => e.currentTarget.style.opacity = '1'}
+                                onMouseOut={e => e.currentTarget.style.opacity = '0.7'}
+                            />
+                        </a>
                     </div>
                 </div>
             </div>

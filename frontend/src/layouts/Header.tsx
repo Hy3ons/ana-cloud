@@ -13,7 +13,7 @@ const Header: React.FC = () => {
                 <span style={{ marginLeft: '8px', fontWeight: 500 }}>Overview</span>
             </div>
 
-            <div style={styles.userArea}>
+            <div style={{ ...styles.userArea, gap: '16px' } as React.CSSProperties}>
                 <div
                     style={styles.userProfile}
                     onMouseEnter={() => setIsDropdownOpen(true)}
@@ -47,6 +47,21 @@ const Header: React.FC = () => {
                         </div>
                     )}
                 </div>
+                <a
+                    href="https://github.com/Hy3ons/ana-cloud"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="해당 시스템을 개발한 Github Repository로 이동합니다."
+                    style={{ display: 'flex', alignItems: 'center', transition: 'opacity 0.2s', padding: '4px' }}
+                >
+                    <img
+                        src="/logo-github-w.png"
+                        alt="GitHub Repository"
+                        style={{ width: '28px', height: '28px', opacity: 0.7, cursor: 'pointer' }}
+                        onMouseOver={e => e.currentTarget.style.opacity = '1'}
+                        onMouseOut={e => e.currentTarget.style.opacity = '0.7'}
+                    />
+                </a>
             </div>
         </header>
     );
