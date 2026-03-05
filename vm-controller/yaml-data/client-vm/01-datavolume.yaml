@@ -1,0 +1,18 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: {{VM_NAME}}-disk         # 사용자가 가질 실제 디스크 이름
+  namespace: {{NAMESPACE}}
+
+spec:
+  source:
+    pvc:
+      name: {{VM_IMAGE}}
+      namespace: cloud-admin      # 다른 네임스페이스의 원본을 참조
+
+  pvc:
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: local-path # local-path
+    resources:
+      requests:
+        storage: 30Gi

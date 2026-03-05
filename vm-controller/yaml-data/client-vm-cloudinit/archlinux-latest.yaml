@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{VM_NAME}}-cloud-init-userdata
+  namespace: {{NAMESPACE}}
+stringData:
+  userdata: |
+    #cloud-config
+    # 1. 아치 리눅스 네트워크 강제 활성화 (bootcmd에서 처리)
+    bootcmd:
+      - systemctl mask systemd-networkd-wait-online.service
+      # 기존 네트워크 설정 찌꺼기 제거 및 자동화 준비
+      - nmcli device set enp1s0 managed yes || true
+
+    # 2. 시스템 설정
+    hostname: {{VM_NAME}}
+    disable_root: false
+    ssh_pwauth: true
+    chpasswd:
+      list: |
+        root:{{PASSWORD}}
+      expire: False
+
+    # 3. 아치 리눅스 전용 런타임 설정
+    runcmd:
+      # SSH 서버 준비 (아치는 sshd를 사용)
+      - mkdir -p /run/sshd
+      - chmod 755 /run/sshd
+      
+      # SSHD 설정 수정 (아치 리눅스 경로 및 설정 방식)
+      - sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+      - sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      - systemctl enable --now sshd
+
+
+      # 터미널 프롬프트 (초록색)
+      - echo 'export PS1="\[\e[32m\]\u@\h\[\e[m\]:\[\e[34m\]\w\[\e[m\]\$ "' >> /root/.bashrc
+
+      # 네트워크 강제 활성화 (아까 그 수동 명령어를 자동화)
+      - ip link set enp1s0 up || true
+      - dhclient enp1s0 -nw || true
+
+      # [중요] 아치 리눅스 패키지 설치 (apt 대신 pacman)
+      - pacman -Sy --noconfirm figlet || true
+      - figlet "AnA Arch Cloud" > /etc/motd
+
+      # 1. PS1 프롬프트 설정 (초록색 root@host : 파란색 경로)
+      # 이미 PS1 설정이 있으면 수정하고, 없으면 파일 끝에 추가함
+      - grep -q "export PS1=" /root/.bashrc && sed -i 's|export PS1=.*|export PS1="\\[\\e[32m\\]\\u@\\h\\[\\e[m\\]:\\[\\e[34m\\]\\w\\[\\e[m\\]\\$ "|' /root/.bashrc || echo 'export PS1="\[\e[32m\]\u@\h\[\e[m\]:\[\e[34m\]\w\[\e[m\]\$ "' >> /root/.bashrc
+
+      # 2. ls 명령어 색상(alias) 설정
+      # ls를 쳤을 때 폴더는 파란색, 실행파일은 초록색 등으로 보이게 함
+      - grep -q "alias ls=" /root/.bashrc || echo 'alias ls="ls --color=auto"' >> /root/.bashrc
+      - grep -q "alias ll=" /root/.bashrc || echo 'alias ll="ls -alF --color=auto"' >> /root/.bashrc
+
+      - echo "[[ -f ~/.bashrc ]] && . ~/.bashrc" >> /root/.bash_profile
+
+      - systemctl restart sshd
+
+    final_message: "Arch Linux is ready after $UPTIME seconds"

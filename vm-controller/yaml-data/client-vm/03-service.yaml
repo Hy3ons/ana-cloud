@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: vps-access-{{VM_NAME}}
+  namespace: {{NAMESPACE}}
+
+spec:
+  type: NodePort
+  selector:
+    vm.kubevirt.io/name: {{VM_NAME}}
+  ports:
+    - port: 22
+      targetPort: 22
+      nodePort: {{NODEPORT}}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vps-web-{{VM_NAME}}
+  namespace: {{NAMESPACE}}
+spec:
+  type: NodePort
+  selector:
+    vm.kubevirt.io/name: {{VM_NAME}}
+  ports:
+    - port: 80
+      targetPort: 80

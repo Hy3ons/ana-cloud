@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{VM_NAME}}-cloud-init-userdata
+  namespace: {{NAMESPACE}}
+
+stringData:
+  userdata: |
+    #cloud-config
+    # L3 계층 활성화 작업 빠르게 끝내기
+    bootcmd:
+      - [ systemctl, mask, systemd-networkd-wait-online.service ]
+      - [ systemctl, mask, NetworkManager-wait-online.service ]
+      - echo "DefaultTimeoutStartSec=10s" >> /etc/systemd/system.conf
+
+    # 1. Root 계정 보안 및 접근 설정
+    hostname: {{VM_NAME}}
+    disable_root: false
+    ssh_deletekeys: false
+    ssh_pwauth: true
+    password: {{PASSWORD}}
+    chpasswd: 
+      list: |
+        root:{{PASSWORD}}
+      expire: False
+
+    # 2. 시스템 부팅 시 실행할 명령어 (런타임 설정)
+    runcmd:
+      # sshd 서버 실행을 위한 준비 VM 시작시 /run 초기화되어 sshd가 실행되지 않음
+      - mkdir -p /run/sshd
+      - chmod 755 /run/sshd
+
+      # sshd 서비스를 위한 RuntimeDirectory 설정
+      - sed -i '/\[Service\]/a RuntimeDirectory=sshd\nRuntimeDirectoryMode=0755' /lib/systemd/system/ssh.service
+      - systemctl daemon-reload
+
+      # SSHD 설정 수정: Root 로그인 및 비밀번호 인증 허용
+      - sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+      - sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      
+      # SSH 서비스 재시작 (변경사항 적용)
+      - systemctl restart ssh
+      
+      # 터미널 프롬프트 설정 (요청하신 초록색 호스트네임)
+      - echo 'export PS1="\[\e[32m\]\u@\h\[\e[m\]:\[\e[34m\]\w\[\e[m\]\$ "' >> /root/.bashrc
+
+      # 인터페이스 강제 활성화 (L1 / L2 UP)
+      - ip link set enp1s0 up
+      - dhclient enp1s0 -nw
+
+      # (옵션) 환영 메시지 추가
+      - apt-get update
+      - apt-get install -y figlet
+      - figlet "AnA Cloud" > /etc/motd
+
+    # 3. 마지막 리포트 생성 (디버깅용)
+    final_message: "The system is finally up, after $UPTIME seconds"

@@ -1,0 +1,43 @@
+:root {
+  /* Colors - Dark Azure Theme */
+  --bg-primary: #0f1115;      /* Very dark blue-grey, almost black */
+  --bg-secondary: #1a1e26;    /* Slightly lighter for cards/sidebar */
+  --bg-tertiary: #252b36;     /* Borders/Inputs */
+  
+  --text-primary: #ffffff;
+  --text-secondary: #b0b8c6;
+  --text-muted: #6e7a8e;
+
+  /* Brand Colors */
+  --primary-color: #0078d4;   /* Azure Blue */
+  --primary-hover: #0060aa;
+  --primary-active: #004d88;
+
+  --accent-success: #107c10;
+  --accent-warning: #d83b01;
+  --accent-error: #c50f1f;
+  --accent-info: #0078d4;
+
+  /* Border */
+  --border-color: #3b4252;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Layout */
+  --sidebar-width: 250px;
+  --header-height: 60px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.3);
+}

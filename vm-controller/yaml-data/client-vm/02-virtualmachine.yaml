@@ -1,0 +1,28 @@
+# 02-virtualmachine.yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+
+metadata:
+  name: {{VM_NAME}}
+  namespace: {{NAMESPACE}}
+
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        resources:
+          requests: { memory: 4Gi, cpu: 2 }
+        devices:
+          disks:
+            - name: rootdisk
+              disk: { bus: virtio }
+            - name: cloudinitdisk
+              disk: { bus: virtio }
+      volumes:
+        - name: rootdisk
+          dataVolume: { name: {{VM_NAME}}-disk }
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            secretRef:
+              name : {{VM_NAME}}-cloud-init-userdata

@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vm-ingress-{{VM_NAME}}
+  namespace: {{NAMESPACE}}
+
+  annotations:
+    kubernetes.io/ingress.class: traefik
+
+    # 여기서 ML 분석을 위해 로그를 남기거나 미러링 설정을 추가할 수 있습니다.
+    # nginx.ingress.kubernetes.io/configuration-snippet: |
+    #   # 예: 모든 요청 바디를 로그로 남기거나 특정 분석 엔진으로 미러링
+
+    # HTTPS로 자동 리다이렉트를 원할 경우 추가합니다. 
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+
+    # 트래픽 인터셉터 추가 (MiddleWare)
+    traefik.ingress.kubernetes.io/router.middlewares: cloud-admin-vm-traffic-interceptor@kubernetescrd
+
+spec:
+  tls:
+    - hosts:
+      - {{DNS_HOST}}
+      # secretName: global-tls-secret # SSL 인증서가 담긴 Secret
+
+  rules:
+    - host: {{DNS_HOST}}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: vps-web-{{VM_NAME}}
+              port:
+                number: 80

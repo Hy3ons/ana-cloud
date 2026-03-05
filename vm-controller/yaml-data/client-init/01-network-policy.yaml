@@ -1,0 +1,74 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: deny-from-other-namespaces
+  namespace: {{NAMESPACE}}
+
+spec:
+  podSelector: {} # 이 네임스페이스의 모든 파드에 적용
+  ingress:
+  - from:
+    - podSelector: {} # 자기 네임스페이스 내부 통신만 허용
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: cloud-admin #CDI 복제를 위한 네임스페이스 허용 및 감사 허용
+  
+  - from:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+      - protocol: TCP
+        port: 22
+
+  - from:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+      - protocol: TCP
+        port: 80
+
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: tenant-isolation-egress
+  namespace: {{NAMESPACE}}
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+
+  - to:
+    - podSelector: {}
+
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+
+  # 3. Kubernetes API Server 접근 (최소한의 제어권)
+  # Pod가 K8s 리소스를 조회해야 할 경우를 대비해 API Server IP만 콕 찍어 허용합니다.
+  - to:
+    - ipBlock:
+        cidr: 10.43.0.1/32 
+    ports:
+    - protocol: TCP
+      port: 443
+
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8          # K3s Pod/Service 대역 (내부망 전체)
+        - 172.16.0.0/12       # Docker/기타 사설망
+        - 192.168.0.0/16      # 로컬 네트워크
+        - 169.254.169.254/32  # 클라우드 메타데이터 (가장 위험)
