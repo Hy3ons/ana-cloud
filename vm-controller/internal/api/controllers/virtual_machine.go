@@ -115,7 +115,7 @@ func (vmC *VirtualMachineController) CreateVM(c *gin.Context) {
 		req.VmName, req.VmSSHPassword, hostname, "yaml-data/client-vm", req.VmImage, cast.ToInt32(signed_port))
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create VM"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create VM on K8s"})
 		return
 	}
 
@@ -131,14 +131,14 @@ func (vmC *VirtualMachineController) CreateVM(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create VM"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create VM info on Database"})
 		return
 	}
 
 	// 프로비저닝 상태를 감시하는 고루틴 실행
-	// Timeout을 설정하여 고루틴 누수(goroutine leak)를 방지합니다. 15분으로 넉넉하게 잡습니다.
+	// Timeout을 설정하여 고루틴 누수(goroutine leak)를 방지합니다. 5분으로 넉넉하게 잡습니다.
 	go func(namespace, vmName string) {
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
 		err := vmC.k8sService.WaitForVMProvisioning(ctx, namespace, vmName)

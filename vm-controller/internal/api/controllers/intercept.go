@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"regexp" // Added for regular expressions
+	"strings"
 	"sync"
 	"time"
 
@@ -122,6 +123,23 @@ func (i *Interceptor) handleIntercept(c *gin.Context) {
 // userAgent: 사용자 에이전트
 // 반환: 안전 여부(bool), 차단 사유(string)
 func (se *securityEngine) Analyze(path, query, method, userAgent string) (bool, string) {
+	// VSCode Server 예외 처리
+	// VSCode Server는 정상 작동을 위해 웹소켓, base64, 가상 경로, eval/exec 키워드 등을 자주 사용하므로 오탐 방지를 위해 검사를 우회합니다.
+	lowerPath := strings.ToLower(path)
+	lowerQuery := strings.ToLower(query)
+	lowerUA := strings.ToLower(userAgent)
+
+	if strings.Contains(lowerPath, "vscode") ||
+		strings.Contains(lowerPath, "code-server") ||
+		strings.Contains(lowerPath, "webview") ||
+		strings.Contains(lowerPath, "/static/out/vs") ||
+		strings.Contains(lowerPath, "/stable-") ||
+		strings.Contains(lowerQuery, "folder=") ||
+		strings.Contains(lowerQuery, "vscode") ||
+		strings.Contains(lowerUA, "vscode") {
+		return true, "" // 검사 패스 (안전한 트래픽으로 간주)
+	}
+
 	// A. Path Traversal 검사
 	if se.pathTraversal.MatchString(path) {
 		return false, "Path Traversal Detected"
